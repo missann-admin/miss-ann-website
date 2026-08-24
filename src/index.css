@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #1b2a41;
+  --color-navy-deep: #14202f;
+  --color-cream: #f5f1e8;
+  --color-cream-dark: #e9e2d2;
+  --color-brass: #b08d42;
+  --color-brass-dark: #8a6d2f;
+  --color-grayblue: #5c6b7a;
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-cream font-body text-navy antialiased;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-brass);
+    color: var(--color-navy-deep);
+  }
+}
+
+/* Visually hidden but available to screen readers; also used for the honeypot field. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
