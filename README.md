@@ -31,6 +31,10 @@ Drop photos into `public/images/` using the filenames in
 [public/images/README.md](public/images/README.md). Placeholder blocks are
 shown until each file exists — no code changes needed.
 
+## Live site
+
+https://miss-ann.missannadmin.workers.dev (custom domain `missann.us` pending DNS propagation)
+
 ## Deployment
 
 Cloudflare Workers (static assets), project `miss-ann`, connected to this
