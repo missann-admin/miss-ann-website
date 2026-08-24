@@ -1,0 +1,9 @@
+// Cloudflare Workers config: static-assets-only deployment of the Vite build.
+{
+  "name": "miss-ann",
+  "compatibility_date": "2026-01-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

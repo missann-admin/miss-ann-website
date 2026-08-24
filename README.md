@@ -33,6 +33,7 @@ shown until each file exists — no code changes needed.
 
 ## Deployment
 
-Cloudflare Pages, project `miss-ann`, connected to this GitHub repository.
-Build command `npm run build`, output directory `dist`. `public/_redirects`
-handles SPA deep links.
+Cloudflare Workers (static assets), project `miss-ann`, connected to this
+GitHub repository. Build command `npm run build`, deploy command
+`npx wrangler deploy`. [wrangler.jsonc](wrangler.jsonc) serves `dist/` with
+SPA fallback for deep links.
