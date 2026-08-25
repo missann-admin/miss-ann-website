@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
-import { supabase } from "../lib/supabase";
+import { supabaseConfigured, supabaseInsert } from "../lib/supabase";
 import { isValidEmail, looksLikeSpam, type SubmitState } from "../lib/forms";
 
 const SUCCESS_MESSAGE =
@@ -36,7 +36,7 @@ export default function ContactForm() {
       setState({ status: "success" });
       return;
     }
-    if (!supabase) {
+    if (!supabaseConfigured) {
       setState({
         status: "error",
         message:
@@ -45,7 +45,7 @@ export default function ContactForm() {
       return;
     }
     setState({ status: "submitting" });
-    const { error } = await supabase.from("contact_messages").insert({
+    const { error } = await supabaseInsert("contact_messages", {
       name: name.trim(),
       email: email.trim(),
       message: message.trim(),

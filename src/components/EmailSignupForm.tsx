@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
-import { supabase } from "../lib/supabase";
+import { supabaseConfigured, supabaseInsert } from "../lib/supabase";
 import { isValidEmail, looksLikeSpam, type SubmitState } from "../lib/forms";
 
 const SUCCESS_MESSAGE =
@@ -24,7 +24,7 @@ export default function EmailSignupForm() {
       setState({ status: "success" });
       return;
     }
-    if (!supabase) {
+    if (!supabaseConfigured) {
       setState({
         status: "error",
         message:
@@ -33,9 +33,9 @@ export default function EmailSignupForm() {
       return;
     }
     setState({ status: "submitting" });
-    const { error } = await supabase
-      .from("email_signups")
-      .insert({ email: email.trim().toLowerCase() });
+    const { error } = await supabaseInsert("email_signups", {
+      email: email.trim().toLowerCase(),
+    });
     // 23505 = unique violation: already signed up, which is a success for them.
     if (error && error.code !== "23505") {
       setState({
