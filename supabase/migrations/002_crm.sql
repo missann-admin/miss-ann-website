@@ -124,8 +124,16 @@ create policy "anon can insert submissions"
 -- ---------------------------------------------------------------------------
 -- Convenience view for pulling marketing lists.
 -- ---------------------------------------------------------------------------
-create or replace view mailing_list as
+-- security_invoker is essential: without it a view runs with its OWNER's
+-- privileges and reads straight past row level security on `contacts`,
+-- exposing the whole list to the public anon key. See 003 for the incident.
+create view mailing_list
+  with (security_invoker = true)
+as
   select email, name, interests, stage, first_seen_at, last_seen_at
   from contacts
   where email_consent = true
   order by last_seen_at desc;
+
+revoke all on mailing_list from anon, authenticated;
+revoke all on contacts from anon, authenticated;
