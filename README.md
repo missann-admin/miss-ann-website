@@ -22,10 +22,10 @@ npm run preview   # serve the production build locally
 ## Configuration
 
 - `src/config.ts`
-  - `GOFUNDME_URL` — null while no campaign exists; `/restore` then shows ways
-    to help instead of a donate button. Setting a URL swaps in the button and
-    embedded widget. **If set, add the campaign host to `frame-src` in
-    [public/_headers](public/_headers)** or the iframe is blocked by CSP.
+  - `DONATE_URL` — PayPal donate link; null while none exists, in which case
+    `/restore` shows non-monetary ways to help only. Setting a URL adds a
+    "Donate Now" button alongside them, plus a not-tax-deductible disclosure
+    (no nonprofit is behind the project yet — see Donations below).
   - `YOUTUBE_VIDEOS` — add videos without touching components.
   - `CONTACT_INTERESTS` — segmentation options on the contact form. Add new
     values freely; **do not rename existing ones**, or stored records stop
@@ -58,6 +58,36 @@ view, never from `contacts`.**
 Reading a table with the anon key returns `[]`, and UPDATE/DELETE return `204`
 with zero rows affected. That is RLS working, not a hole: PostgREST reports
 success even when policies filter every row out.
+
+## Donations
+
+Handled via a PayPal donate link (`DONATE_URL` in `src/config.ts`), not
+GoFundMe — no nonprofit exists yet, so keeping this in-house avoids platform
+fees. Requires a PayPal **Business** account (free to open/upgrade to;
+Personal accounts can't generate a Donate button or configure IPN).
+[supabase/functions/paypal-ipn](supabase/functions/paypal-ipn) receives
+PayPal's Instant Payment Notification on each completed donation, verifies
+it by posting it back to PayPal, and logs it into `form_submissions` (see
+[004_donations.sql](supabase/migrations/004_donations.sql)) — the same merge
+trigger then rolls it into `contacts`, bumping `stage` to `donor` and
+accumulating `total_donated_cents`. The anon insert policy explicitly
+forbids setting `amount_cents`/`payment_event_id`, so only the IPN function
+(using the service role key, which bypasses RLS) can create a donation
+record — a site visitor cannot fake one through the public API.
+
+Setup:
+1. Open/upgrade to a PayPal Business account, then create a Donate button
+   (PayPal > Pay & Get Paid > PayPal Buttons) — copy the resulting link
+   (`https://www.paypal.com/donate/?hosted_button_id=...`) into `DONATE_URL`.
+2. Deploy: `supabase functions deploy paypal-ipn --no-verify-jwt` (PayPal
+   can't send our auth header, so JWT verification must be off for this one
+   function).
+3. PayPal > Account Settings > Notifications > Instant Payment
+   Notifications > enable, and point the URL at the deployed function.
+
+Donations are not tax-deductible until a nonprofit or fiscal sponsor is
+arranged — the disclosure in `RestorationFund.tsx` reflects that and should
+be removed if that changes.
 
 ## Photos
 

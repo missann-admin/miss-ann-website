@@ -3,11 +3,16 @@
  */
 
 /**
- * Public fundraising campaign URL (GoFundMe or similar). Null until a campaign
- * exists — /restore then shows ways to help instead of a donate button.
- * Setting this to a URL swaps in the donate button and embedded widget.
+ * PayPal donate link for direct donations. Null until Frank's PayPal
+ * Business account and Donate button exist — /restore then shows ways to
+ * help instead of a donate button. Setting this to a URL (e.g.
+ * https://www.paypal.com/donate/?hosted_button_id=xxxx) adds a "Donate Now"
+ * button. No nonprofit is behind this yet, so donations are NOT
+ * tax-deductible — RestorationFund.tsx shows that disclosure whenever this
+ * is set. If a fiscal sponsor (e.g. CBHS) is arranged later, remove the
+ * disclosure and update the donate link/processor accordingly.
  */
-export const GOFUNDME_URL: string | null = null;
+export const DONATE_URL: string | null = null;
 
 /**
  * Interest options on the contact form. The `value` is stored in the database

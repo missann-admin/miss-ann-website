@@ -2,7 +2,7 @@ import Seo from "../components/Seo";
 import RestorationFund from "../components/RestorationFund";
 import EmailSignupForm from "../components/EmailSignupForm";
 import PlaceholderImage from "../components/PlaceholderImage";
-import { GOFUNDME_URL } from "../config";
+import { DONATE_URL } from "../config";
 
 export default function Restore() {
   return (
@@ -56,7 +56,7 @@ export default function Restore() {
         aria-label="Restoration fund"
         className="mx-auto max-w-3xl px-4 pb-8"
       >
-        <RestorationFund url={GOFUNDME_URL} />
+        <RestorationFund url={DONATE_URL} />
       </section>
 
       <section
