@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { supabaseConfigured, supabaseInsert } from "../lib/supabase";
 import { isValidEmail, looksLikeSpam, type SubmitState } from "../lib/forms";
+import { captureAttribution } from "../lib/attribution";
 
 const SUCCESS_MESSAGE =
   "Thank you — we'll be in touch about Miss Ann's restoration.";
@@ -33,11 +34,16 @@ export default function EmailSignupForm() {
       return;
     }
     setState({ status: "submitting" });
-    const { error } = await supabaseInsert("email_signups", {
+    // Submissions are append-only and deduplicated into `contacts` by trigger,
+    // so signing up twice is harmless and needs no special handling here.
+    const { error } = await supabaseInsert("form_submissions", {
       email: email.trim().toLowerCase(),
+      interests: ["updates"],
+      // Joining a mailing list is itself the opt-in.
+      email_consent: true,
+      ...captureAttribution("email-signup"),
     });
-    // 23505 = unique violation: already signed up, which is a success for them.
-    if (error && error.code !== "23505") {
+    if (error) {
       setState({
         status: "error",
         message: "Something went wrong — please try again.",
