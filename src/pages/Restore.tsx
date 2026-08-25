@@ -1,5 +1,5 @@
 import Seo from "../components/Seo";
-import GoFundMeEmbed from "../components/GoFundMeEmbed";
+import RestorationFund from "../components/RestorationFund";
 import EmailSignupForm from "../components/EmailSignupForm";
 import PlaceholderImage from "../components/PlaceholderImage";
 import { GOFUNDME_URL } from "../config";
@@ -56,7 +56,7 @@ export default function Restore() {
         aria-label="Restoration fund"
         className="mx-auto max-w-3xl px-4 pb-8"
       >
-        <GoFundMeEmbed url={GOFUNDME_URL} />
+        <RestorationFund url={GOFUNDME_URL} />
       </section>
 
       <section
@@ -71,7 +71,8 @@ export default function Restore() {
           Stay Informed
         </h2>
         <p className="mt-3 mb-6 text-center text-grayblue">
-          Join the email list for restoration news and the fund&rsquo;s launch.
+          Join the email list for restoration news and word of the
+          fund&rsquo;s opening.
         </p>
         <EmailSignupForm />
       </section>
