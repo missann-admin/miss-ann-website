@@ -26,7 +26,7 @@ export default function Timeline({ eras }: TimelineProps) {
           const textFirst = index % 2 === 0;
           return (
             <li
-              key={era.years}
+              key={era.title}
               className="relative md:grid md:grid-cols-2 md:gap-16"
             >
               <span

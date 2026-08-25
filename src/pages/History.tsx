@@ -21,28 +21,52 @@ const eras: Era[] = [
       "Siele on the ways at Pusey & Jones, Wilmington, Delaware, 1926",
   },
   {
-    years: "1940",
+    years: "1926",
+    title: "Maiden Voyage",
+    body: (
+      <>
+        In early August 1926, John and Elsie French, their servants, and
+        friends set out from New York for what was meant to be a leisurely
+        passage home to Detroit by way of the Great Lakes. A sudden storm blew
+        up and Siele broached; her deep, narrow-beamed hull — built to keep
+        Elsie, who feared the water, feeling safe — righted itself as designed.
+        Mrs. French, thrown to the deck, went below and did not set foot aboard
+        Siele again.
+      </>
+    ),
+    imageSrc: "/images/era-maiden-voyage.jpg",
+    imageCaption: "Elsie French christens Siele, April 10, 1926",
+  },
+  {
+    years: "1936–1941",
     title: "Sea Wolf",
     body: (
       <>
-        Sold to Robert H. Wolfe of Columbus, Ohio, publisher of the{" "}
-        <em>Columbus Dispatch</em>.
+        Sold in 1936 to Robert H. Wolfe of Columbus, Ohio, publisher of the{" "}
+        <em>Columbus Dispatch</em>, who renamed her <em>Sea Wolf</em> and kept
+        her at the Catawba Yacht Club between Sandusky and Toledo, Ohio. On
+        January 13, 1941, Mr. Wolfe turned her over to the U.S. Navy to assist
+        the war effort.
       </>
     ),
     imageSrc: "/images/era-seawolf.jpg",
-    imageCaption: "Sea Wolf, ca. 1940",
+    imageCaption: "Her salon during the Sea Wolf years, ca. 1936–1941",
   },
   {
     years: "1941–1946",
     title: "USS Aquamarine (PYc-7)",
     body: (
       <>
-        Purchased by the U.S. Navy January 13, 1941; commissioned April 9,
-        1941. Painted battleship gray and assigned to the Naval Research
-        Laboratory for pioneering underwater-acoustics research on the Potomac
-        and Chesapeake. Aboard her, NRL developed a bubble-cloud ship-quieting
-        technique that cut underwater noise by 20 decibels and was adopted
-        across the fleet. In 1945–46 she served as special tender to the
+        Commissioned April 19, 1941, and refit at Charleston with
+        higher-output diesels, a gyrocompass, battleship-gray paint, and two
+        30-caliber guns. Assigned to the Naval Research Laboratory for
+        pioneering underwater-acoustics research on the Potomac and
+        Chesapeake, where NRL developed a bubble-cloud ship-quieting technique
+        that cut underwater noise by 20 decibels and was adopted across the
+        fleet. In the fall of 1943 she operated off the Connecticut coast near
+        New London, and in the winter and spring of 1944 she cruised between
+        Florida and the Bahamas — both times on further classified NRL
+        experimental work. In 1945–46 she served as special tender to the
         presidential yachts USS <em>Potomac</em> and USS <em>Williamsburg</em>.
         Decommissioned June 21, 1946.
       </>
@@ -55,8 +79,12 @@ const eras: Era[] = [
     title: "Silent Years",
     body: (
       <>
-        Stripped of engines and heavily modified, she lay essentially abandoned
-        for eight years.
+        The Navy transferred her to the Maritime Commission&rsquo;s War
+        Shipping Administration for disposal in January 1947. Retired Colonel
+        Edward Grimm bought the hull, intending to restore her and carry her
+        home to the Philippines — a bigger undertaking than he expected. She
+        sat uncared for and deteriorating in a salvage yard for the next
+        several years.
       </>
     ),
     imageSrc: "/images/era-silent.jpg",
@@ -67,13 +95,21 @@ const eras: Era[] = [
     title: "Miss Ann at the Tides Inn",
     body: (
       <>
-        Ennolls A. Stephens, owner of The Tides Inn in Irvington, Virginia,
-        rebuilt her with naval architect John H. Wells — new bow, graceful
-        fanned stern, restored gunwales — and renamed her for his wife, Ann Lee
-        Stephens. For 52 years she carried Tides Inn guests along Carter Creek
-        and the Rappahannock. In 1956, retired Navy Captain William Thomas
-        heard her horn from shore and recognized it instantly: he had commanded
-        her as USS <em>Aquamarine</em> a decade earlier.
+        Hearing she might be for sale and seeing her true potential, Ennolls
+        A. Stephens, owner of The Tides Inn in Irvington, Virginia, made
+        Colonel Grimm an offer; Grimm agreed, stripping the Navy engines and
+        gyrocompass before the hull changed hands. Stephens hired
+        New York yacht designer John H. Wells to rebuild her — new bow, graceful
+        fanned stern, factory-rebuilt Cleveland diesel engines — and discovered
+        the beautiful 1920s woodwork hidden under decades of battleship-gray
+        paint. His hotel guests voted on a name for the rebuilt yacht, and it
+        was clear the choice would be his wife&rsquo;s: Ann. For 52 years she
+        carried Tides Inn guests along Carter Creek and the Rappahannock,
+        wintering in Florida with the Stephenses from 1957 to 1960 and
+        returning each spring when the inn reopened. In 1956, retired Navy
+        Captain William Thomas heard her horn from shore and recognized it
+        instantly: he had commanded her as USS <em>Aquamarine</em> a decade
+        earlier.
       </>
     ),
     imageSrc: "/images/era-tidesinn.jpg",
@@ -98,8 +134,13 @@ const eras: Era[] = [
 
 const particulars = [
   { label: "Length", value: "127 feet" },
+  { label: "Beam", value: "20.5 feet" },
+  { label: "Draft", value: "7.5 feet" },
+  { label: "Displacement", value: "183 tons" },
   { label: "Hull", value: "Steel" },
   { label: "Built", value: "1926, Pusey & Jones" },
+  { label: "Propulsion", value: "Twin 425-hp diesels" },
+  { label: "Cruising Speed", value: "9 knots" },
   { label: "National Register", value: "#98001310" },
   { label: "Virginia DHR File", value: "242-0034" },
 ];
