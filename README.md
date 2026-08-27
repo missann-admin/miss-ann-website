@@ -75,14 +75,23 @@ forbids setting `amount_cents`/`payment_event_id`, so only the IPN function
 (using the service role key, which bypasses RLS) can create a donation
 record — a site visitor cannot fake one through the public API.
 
+The function also requires the IPN's `receiver_email` to match
+`PAYPAL_RECEIVER_EMAIL`. PayPal's postback check proves only that a
+transaction is genuine, not that it was paid to *us*; without the receiver
+check, anyone could aim their own account's IPN at this endpoint and invent
+donors. Only USD is accepted, since `mc_gross` is denominated in
+`mc_currency` and totals are stored as a single scalar.
+
 Setup:
 1. Open/upgrade to a PayPal Business account, then create a Donate button
    (PayPal > Pay & Get Paid > PayPal Buttons) — copy the resulting link
    (`https://www.paypal.com/donate/?hosted_button_id=...`) into `DONATE_URL`.
-2. Deploy: `supabase functions deploy paypal-ipn --no-verify-jwt` (PayPal
+2. Set the receiver: `supabase secrets set PAYPAL_RECEIVER_EMAIL=<the
+   Business account's email>`. Must match exactly, or every IPN is rejected.
+3. Deploy: `supabase functions deploy paypal-ipn --no-verify-jwt` (PayPal
    can't send our auth header, so JWT verification must be off for this one
    function).
-3. PayPal > Account Settings > Notifications > Instant Payment
+4. PayPal > Account Settings > Notifications > Instant Payment
    Notifications > enable, and point the URL at the deployed function.
 
 Donations are not tax-deductible until a nonprofit or fiscal sponsor is

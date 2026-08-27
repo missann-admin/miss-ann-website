@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 type RestorationFundProps = {
-  /** Stripe Payment Link URL once one exists; null until then. */
+  /** PayPal donate link URL once one exists; null until then. */
   url: string | null;
 };
 
@@ -34,7 +34,7 @@ const WAYS_TO_HELP = [
 
 /**
  * The restoration fund block on /restore. Always offers the non-monetary
- * ways to help; adds a direct donate button once a Stripe Payment Link
+ * ways to help; adds a direct donate button once a PayPal donate link
  * exists. No nonprofit stands behind the project yet, so a donation
  * disclosure runs alongside the button — remove it if a fiscal sponsor
  * (e.g. CBHS) is arranged later.

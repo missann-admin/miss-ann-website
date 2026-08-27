@@ -38,7 +38,7 @@ begin
     email, name, interests, first_form, first_referrer,
     first_utm_source, first_utm_campaign,
     email_consent, consent_at, submission_count,
-    total_donated_cents, last_donated_at
+    total_donated_cents, last_donated_at, stage
   )
   values (
     clean_email, clean_name, coalesce(new.interests, '{}'),
@@ -47,7 +47,11 @@ begin
     case when new.email_consent then now() end,
     1,
     coalesce(new.amount_cents, 0),
-    case when new.amount_cents is not null then now() end
+    case when new.amount_cents is not null then now() end,
+    -- Someone whose very first contact with us is a donation is a donor, not
+    -- a 'new' lead; without this they'd fall through to the column default
+    -- and be missed by every "where stage = 'donor'" query.
+    case when coalesce(new.amount_cents, 0) > 0 then 'donor' else 'new' end
   )
   on conflict (email) do update set
     name = coalesce(excluded.name, contacts.name),

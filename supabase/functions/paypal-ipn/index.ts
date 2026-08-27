@@ -14,7 +14,9 @@
 //      into DONATE_URL in src/config.ts.
 //
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided automatically in
-// the Edge Function environment — no need to set them.
+// the Edge Function environment — no need to set them. PAYPAL_RECEIVER_EMAIL
+// must be set by hand to the Business account's email:
+//   supabase secrets set PAYPAL_RECEIVER_EMAIL=frank@example.com
 //
 // PayPal has no signing secret for IPN. Authenticity is instead verified by
 // posting the exact received body back to PayPal, which replies VERIFIED or
@@ -22,6 +24,12 @@
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+// VERIFIED only proves the transaction is real — not that it was paid to us.
+// Without this check, anyone could point their own PayPal account's IPN URL
+// at this function and inject donations with an email and amount of their
+// choosing. Checking the receiver is PayPal's own documented requirement.
+const RECEIVER_EMAIL = Deno.env.get("PAYPAL_RECEIVER_EMAIL")!;
 
 // https://ipnpb.paypal.com is production; use
 // https://ipnpb.sandbox.paypal.com for testing against a sandbox button.
@@ -50,14 +58,32 @@ Deno.serve(async (req) => {
   }
 
   const params = new URLSearchParams(rawBody);
+
+  // Reject anything paid to a different PayPal account (see RECEIVER_EMAIL).
+  const receiver = params.get("receiver_email") ?? params.get("business");
+  if (!receiver || receiver.toLowerCase() !== RECEIVER_EMAIL.toLowerCase()) {
+    console.error("IPN for unexpected receiver", receiver);
+    return new Response("wrong receiver", { status: 400 });
+  }
+
   const paymentStatus = params.get("payment_status");
   const email = params.get("payer_email");
   const txnId = params.get("txn_id");
   const grossStr = params.get("mc_gross");
+  const currency = params.get("mc_currency");
 
   // Only a completed donation payment counts; ignore refunds, pending,
-  // denied, and other IPN event types PayPal may also send here.
-  if (paymentStatus !== "Completed" || !email || !txnId || !grossStr) {
+  // denied, and other IPN event types PayPal may also send here. mc_gross is
+  // denominated in mc_currency, so anything but USD would be summed into
+  // total_donated_cents at the wrong scale — ignore it rather than corrupt
+  // the running total.
+  if (
+    paymentStatus !== "Completed" ||
+    currency !== "USD" ||
+    !email ||
+    !txnId ||
+    !grossStr
+  ) {
     return new Response("ignored", { status: 200 });
   }
 
