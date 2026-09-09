@@ -1,4 +1,6 @@
+import { Link } from "react-router-dom";
 import Seo from "../components/Seo";
+import { DONATE_URL } from "../config";
 
 const highlights = [
   {
@@ -41,6 +43,23 @@ export default function Home() {
             </span>{" "}
             National Register of Historic Places
           </p>
+          {DONATE_URL ? (
+            <a
+              href={DONATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-10 inline-block bg-brass px-10 py-4 text-base font-semibold tracking-widest text-navy-deep uppercase hover:bg-cream"
+            >
+              Donate Now
+            </a>
+          ) : (
+            <Link
+              to="/restore"
+              className="mt-10 inline-block bg-brass px-10 py-4 text-base font-semibold tracking-widest text-navy-deep uppercase hover:bg-cream"
+            >
+              Restore Miss Ann
+            </Link>
+          )}
         </div>
       </section>
 

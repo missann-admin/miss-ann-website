@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
+import { DONATE_URL } from "../config";
 
 const links = [
   { to: "/", label: "Home" },
@@ -40,6 +41,25 @@ export default function Nav() {
               </NavLink>
             </li>
           ))}
+          <li>
+            {DONATE_URL ? (
+              <a
+                href={DONATE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-brass px-4 py-1.5 text-sm font-semibold tracking-wider text-navy-deep uppercase transition-colors hover:bg-cream"
+              >
+                Donate
+              </a>
+            ) : (
+              <Link
+                to="/restore"
+                className="inline-block bg-brass px-4 py-1.5 text-sm font-semibold tracking-wider text-navy-deep uppercase transition-colors hover:bg-cream"
+              >
+                Donate
+              </Link>
+            )}
+          </li>
         </ul>
       </nav>
     </header>
