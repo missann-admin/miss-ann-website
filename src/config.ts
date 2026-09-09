@@ -12,7 +12,8 @@
  * is set. If a fiscal sponsor (e.g. CBHS) is arranged later, remove the
  * disclosure and update the donate link/processor accordingly.
  */
-export const DONATE_URL: string | null = null;
+export const DONATE_URL: string | null =
+  "https://www.paypal.com/donate/?hosted_button_id=H43HA57TQDRVQ";
 
 /**
  * Interest options on the contact form. The `value` is stored in the database
