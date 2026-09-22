@@ -12,6 +12,7 @@ import History from "./pages/History";
 import Restore from "./pages/Restore";
 import Videos from "./pages/Videos";
 import Contact from "./pages/Contact";
+import FileDrop from "./pages/FileDrop";
 import ThankYou from "./pages/ThankYou";
 
 function ScrollToTop() {
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/restore" element={<Restore />} />
           <Route path="/videos" element={<Videos />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/filedrop" element={<FileDrop />} />
           <Route path="/thankyou" element={<ThankYou />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

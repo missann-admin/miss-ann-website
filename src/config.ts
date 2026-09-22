@@ -33,3 +33,17 @@ export const YOUTUBE_VIDEOS: { id: string; title: string }[] = [
   { id: "WGVO06oZQGs", title: "Colonial Beach Historical Society feature" },
   { id: "oIT6gKAX3us", title: "Miss Ann cruising the Potomac (2014)" },
 ];
+
+/**
+ * Kinds of material offered through the /filedrop form. Like
+ * CONTACT_INTERESTS, the `value` is stored in the database — add new options
+ * freely, but do not rename existing ones or stored records stop matching.
+ */
+export const FILEDROP_MATERIALS: { value: string; label: string }[] = [
+  { value: "photographs", label: "Photographs" },
+  { value: "documents", label: "Documents, letters, or papers" },
+  { value: "film", label: "Film or video" },
+  { value: "clippings", label: "Newspaper clippings" },
+  { value: "objects", label: "Objects or memorabilia" },
+  { value: "other", label: "Something else" },
+];

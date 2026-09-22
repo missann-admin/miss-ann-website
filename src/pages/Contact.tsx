@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Seo from "../components/Seo";
 import ContactForm from "../components/ContactForm";
 
@@ -52,7 +53,15 @@ export default function Contact() {
             </h2>
             <p className="mt-2 mb-6 text-grayblue">
               Questions about Miss&nbsp;Ann, her history, or her restoration —
-              we&rsquo;d be glad to hear from you.
+              we&rsquo;d be glad to hear from you. If you have photographs or
+              papers to contribute,{" "}
+              <Link
+                to="/filedrop"
+                className="font-semibold underline underline-offset-4 hover:text-brass-dark"
+              >
+                share her history here
+              </Link>{" "}
+              instead.
             </p>
             <ContactForm />
           </div>
