@@ -7,6 +7,8 @@ const CANONICAL_ORIGIN = "https://missann.us";
 type SeoProps = {
   title: string;
   description: string;
+  /** Keep this page out of search results (utility pages, not content). */
+  noindex?: boolean;
 };
 
 function setMeta(attr: "name" | "property", key: string, content: string) {
@@ -32,7 +34,7 @@ function setCanonical(href: string) {
 }
 
 /** Per-page head management: title, description, canonical, and OpenGraph. */
-export default function Seo({ title, description }: SeoProps) {
+export default function Seo({ title, description, noindex = false }: SeoProps) {
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -42,8 +44,12 @@ export default function Seo({ title, description }: SeoProps) {
     setMeta("property", "og:title", title);
     setMeta("property", "og:description", description);
     setMeta("property", "og:url", canonical);
+    // Written on every page, not just noindex ones: setMeta only ever adds or
+    // updates tags, so a noindex left behind by a previous page would follow
+    // the visitor around this single-page app and deindex the whole site.
+    setMeta("name", "robots", noindex ? "noindex,follow" : "index,follow");
     setCanonical(canonical);
-  }, [title, description, pathname]);
+  }, [title, description, noindex, pathname]);
 
   return null;
 }

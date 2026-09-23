@@ -40,6 +40,14 @@ export default function Footer() {
             Join the email list for restoration news
           </Link>
         </p>
+        <p className="mt-2 text-sm">
+          <Link
+            to="/filedrop"
+            className="text-cream/90 underline-offset-4 hover:text-brass hover:underline"
+          >
+            Have photographs or papers of her? Share her history
+          </Link>
+        </p>
       </div>
     </footer>
   );
