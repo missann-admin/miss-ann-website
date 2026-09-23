@@ -1,0 +1,65 @@
+# Keeps the Supabase project from pausing itself.
+#
+# Free-tier projects are paused after 7 days without API activity, and this
+# site is static — nothing touches the database unless a visitor submits a
+# form. A quiet week is therefore enough to take the contact form, the email
+# signup and /filedrop offline, silently: the pages still load, submissions
+# just fail. That is exactly what happened on 2026-09-01, and it went
+# unnoticed for three weeks.
+#
+# This runs daily rather than weekly. GitHub can skip scheduled runs during
+# periods of high load, and a skipped weekly run would leave a gap longer
+# than the 7-day window; daily means several runs have to fail before the
+# project is at risk. Public repositories get unlimited Actions minutes, so
+# the extra frequency costs nothing.
+#
+# KNOWN LIMITATION: GitHub disables scheduled workflows after 60 days with no
+# repository activity, and emails the owner first. If this project ever goes
+# quiet for two months, re-enable the workflow from the Actions tab — or move
+# the ping to a Cloudflare Worker cron trigger, which has no such rule.
+
+name: Supabase keepalive
+
+on:
+  schedule:
+    # 09:17 UTC daily. An odd minute on purpose: scheduled jobs on the hour
+    # are the most likely to be delayed or dropped when GitHub is busy.
+    - cron: "17 9 * * *"
+  # Lets you run it by hand from the Actions tab to confirm it works.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the Supabase REST API
+        env:
+          # The project URL is not a secret — it is already public in the
+          # site's CSP header and in the shipped JS bundle.
+          SUPABASE_URL: https://gdyoudoxqbmqcsskwqan.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "SUPABASE_ANON_KEY repository secret is not set — the ping"
+            echo "would be unauthenticated and may not count as activity."
+            exit 1
+          fi
+
+          # A real authenticated read, not just a reachable-host check: RLS
+          # returns an empty array to the anon key, so a 200 proves the
+          # database answered rather than merely that the edge is up. A
+          # paused project fails here with 000/5xx.
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 \
+            "${SUPABASE_URL}/rest/v1/form_submissions?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+
+          echo "Supabase responded HTTP ${code}"
+
+          if [ "$code" != "200" ]; then
+            echo "Expected HTTP 200. The project may be paused, or the anon"
+            echo "key may have been rotated. Check the Supabase dashboard."
+            exit 1
+          fi
+
+          echo "Project is awake."
