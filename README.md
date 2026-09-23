@@ -59,6 +59,27 @@ Reading a table with the anon key returns `[]`, and UPDATE/DELETE return `204`
 with zero rows affected. That is RLS working, not a hole: PostgREST reports
 success even when policies filter every row out.
 
+### Keeping the project awake
+
+Free-tier Supabase projects are paused after 7 days without API activity.
+This site is static, so nothing touches the database unless a visitor submits
+a form — a quiet week is enough to take every form offline silently, since
+the pages still load and only submissions fail. That happened on
+2026-09-01 and went unnoticed for three weeks.
+
+[.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml)
+pings the REST API daily to prevent it. It needs a repository secret
+**`SUPABASE_ANON_KEY`** (Settings → Secrets and variables → Actions); the
+workflow fails loudly if it is missing rather than sending an
+unauthenticated request that might not count as activity. Scheduled
+workflows only run from the **default branch**, so this has no effect until
+it is merged to `main`.
+
+Note that GitHub disables scheduled workflows after 60 days of repository
+inactivity. If this project ever goes quiet that long, re-enable it from the
+Actions tab, or move the ping to a Cloudflare Worker cron trigger, which has
+no equivalent rule.
+
 ## Donations
 
 Handled via a PayPal donate link (`DONATE_URL` in `src/config.ts`), not
