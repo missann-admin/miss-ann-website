@@ -80,6 +80,37 @@ inactivity. If this project ever goes quiet that long, re-enable it from the
 Actions tab, or move the ping to a Cloudflare Worker cron trigger, which has
 no equivalent rule.
 
+## Submission notifications
+
+Nothing about a form submission is visible without querying the database, so
+[supabase/functions/submission-notify](supabase/functions/submission-notify)
+emails one on every insert into `form_submissions`. This matters most for
+`/filedrop`, which tells people we will send a private upload link — a promise
+that silently breaks if no one knows a request arrived.
+
+Unlike `paypal-ipn`, this is called by Supabase rather than an outside
+service, so it keeps the default JWT verification and the webhook passes the
+service role key:
+
+1. Deploy: `supabase functions deploy submission-notify` (no
+   `--no-verify-jwt`).
+2. Create a free [Resend](https://resend.com) account, then
+   `supabase secrets set RESEND_API_KEY=re_...`.
+3. Supabase > Database > Webhooks > create a webhook on `form_submissions`,
+   event **Insert**, type **HTTP Request**, method **POST**, URL of the
+   deployed function, with header
+   `Authorization: Bearer <service role key>`.
+
+Until `missann.us` is verified in Resend, leave `NOTIFY_FROM` unset — it falls
+back to Resend's shared sender, which will only deliver to the Resend
+account's own address. So set `NOTIFY_TO` to `missannadmin@gmail.com` first,
+and change it to `admin@missann.us` once the domain is verified (verification
+uses a sending subdomain, so it will not disturb the Email Routing records
+that deliver the aliases).
+
+A failed send returns 500 so it shows up in the webhook logs. The submission
+itself is already stored by then — only the notification is affected.
+
 ## Donations
 
 Handled via a PayPal donate link (`DONATE_URL` in `src/config.ts`), not
