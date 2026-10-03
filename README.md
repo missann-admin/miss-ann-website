@@ -67,13 +67,28 @@ a form — a quiet week is enough to take every form offline silently, since
 the pages still load and only submissions fail. That happened on
 2026-09-01 and went unnoticed for three weeks.
 
+It then happened **again**: the first version of the keepalive required a
+repository secret to be added by hand, that never happened, so it failed
+daily from 2026-09-26 and the project paused again around 2026-09-30. The
+failure notices went to an inbox nobody watches — the same blind spot.
+
 [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml)
-pings the REST API daily to prevent it. It needs a repository secret
-**`SUPABASE_ANON_KEY`** (Settings → Secrets and variables → Actions); the
-workflow fails loudly if it is missing rather than sending an
-unauthenticated request that might not count as activity. Scheduled
-workflows only run from the **default branch**, so this has no effect until
-it is merged to `main`.
+now pings the REST API daily with the publishable key written directly in
+the workflow, so there is no setup step left to forget. Scheduled workflows
+only run from the **default branch**, so it takes effect once merged to
+`main` and needs nothing else.
+
+**On keys in this repo** — the two Supabase keys are not equivalent, and the
+"never commit keys" rule applies to one of them:
+
+- The **publishable** key (`sb_publishable_…`, formerly the anon key) is
+  designed to be shared. It already ships inside the site's JS bundle and is
+  readable by anyone viewing source on missann.us. RLS is the actual
+  protection: `contacts` returns "permission denied" to it and
+  `form_submissions` returns an empty array. Committing it adds no exposure.
+- The **service role** key bypasses RLS entirely and must never appear in
+  this repo, in a workflow, or in the bundle. It belongs only in Supabase
+  secrets, where the Edge Functions read it.
 
 Note that GitHub disables scheduled workflows after 60 days of repository
 inactivity. If this project ever goes quiet that long, re-enable it from the

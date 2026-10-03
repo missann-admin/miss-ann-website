@@ -4,14 +4,29 @@
 # site is static — nothing touches the database unless a visitor submits a
 # form. A quiet week is therefore enough to take the contact form, the email
 # signup and /filedrop offline, silently: the pages still load, submissions
-# just fail. That is exactly what happened on 2026-09-01, and it went
-# unnoticed for three weeks.
+# just fail.
 #
-# This runs daily rather than weekly. GitHub can skip scheduled runs during
-# periods of high load, and a skipped weekly run would leave a gap longer
-# than the 7-day window; daily means several runs have to fail before the
-# project is at risk. Public repositories get unlimited Actions minutes, so
-# the extra frequency costs nothing.
+# This has now happened twice. On 2026-09-01 it went unnoticed for three
+# weeks. The first version of this workflow was supposed to prevent a repeat,
+# but it required a SUPABASE_ANON_KEY repository secret to be added by hand
+# afterwards — that never happened, so it failed every day from 2026-09-26
+# and the project paused again around 2026-09-30. The failure notices went to
+# an inbox nobody was watching, which is the same blind spot all over again.
+#
+# So the key is in this file rather than in a secret, deliberately. It is the
+# publishable key (sb_publishable_...), the one Supabase designs to be shared:
+# it already ships inside the site's JavaScript bundle and is readable by
+# anyone who views source on missann.us. Row Level Security is what actually
+# protects the data — `contacts` returns "permission denied" to this key, and
+# `form_submissions` returns an empty array. Putting it here adds no exposure
+# and removes the manual step that broke this twice.
+#
+# The service role key is the opposite and must NEVER appear in this repo.
+#
+# Runs daily rather than weekly. GitHub can skip scheduled runs during periods
+# of high load, and a skipped weekly run would leave a gap longer than the
+# 7-day window; daily means several runs have to fail before the project is at
+# risk. Public repositories get unlimited Actions minutes, so this is free.
 #
 # KNOWN LIMITATION: GitHub disables scheduled workflows after 60 days with no
 # repository activity, and emails the owner first. If this project ever goes
@@ -34,31 +49,27 @@ jobs:
     steps:
       - name: Ping the Supabase REST API
         env:
-          # The project URL is not a secret — it is already public in the
-          # site's CSP header and in the shipped JS bundle.
           SUPABASE_URL: https://gdyoudoxqbmqcsskwqan.supabase.co
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          # Publishable key — see the note at the top of this file.
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_JxBswl0CtCd_ncWVq9HnRQ_HVRttZb9
         run: |
-          if [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "SUPABASE_ANON_KEY repository secret is not set — the ping"
-            echo "would be unauthenticated and may not count as activity."
-            exit 1
-          fi
-
           # A real authenticated read, not just a reachable-host check: RLS
-          # returns an empty array to the anon key, so a 200 proves the
-          # database answered rather than merely that the edge is up. A
-          # paused project fails here with 000/5xx.
+          # returns an empty array to this key, so a 200 proves the database
+          # answered rather than merely that the edge is up. A paused project
+          # returns 000 or 5xx here — during a restore it briefly returns 401
+          # and 404 from the edge while Postgres is still coming up, which is
+          # exactly why a bare unauthenticated ping would be misleading.
           code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 \
             "${SUPABASE_URL}/rest/v1/form_submissions?select=id&limit=1" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}")
 
           echo "Supabase responded HTTP ${code}"
 
           if [ "$code" != "200" ]; then
-            echo "Expected HTTP 200. The project may be paused, or the anon"
-            echo "key may have been rotated. Check the Supabase dashboard."
+            echo "Expected HTTP 200. The project may be paused, or the"
+            echo "publishable key may have been rotated. Check the Supabase"
+            echo "dashboard at https://supabase.com/dashboard/project/gdyoudoxqbmqcsskwqan"
             exit 1
           fi
 
