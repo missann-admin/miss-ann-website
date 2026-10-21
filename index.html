@@ -50,5 +50,20 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!--
+      Cloudflare Web Analytics. Installed by hand because the site is served
+      by a Worker, and Cloudflare's automatic edge injection does not apply to
+      Worker responses — the "automatic" setup recorded zero visits from
+      August to October 2026. This beacon only runs in a real browser, so its
+      numbers are people; Cloudflare's server-side request counts include
+      every crawler and bot. "spa": true counts client-side route changes as
+      page views — without it, browsing five pages registers as one. The
+      token is public by design and is allowed by the CSP in public/_headers.
+    -->
+    <script
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "7cf34baa23c0485296c744b905b818d8", "spa": true}'
+    ></script>
   </body>
 </html>
