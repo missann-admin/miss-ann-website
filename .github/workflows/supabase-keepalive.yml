@@ -1,76 +1,106 @@
 # Keeps the Supabase project from pausing itself.
 #
-# Free-tier projects are paused after 7 days without API activity, and this
-# site is static — nothing touches the database unless a visitor submits a
-# form. A quiet week is therefore enough to take the contact form, the email
-# signup and /filedrop offline, silently: the pages still load, submissions
-# just fail.
+# Free-tier projects are paused after a week of "too little database
+# activity", and this site is static — nothing touches the database unless a
+# visitor submits a form. A quiet week is enough to take the contact form, the
+# email signup and /filedrop offline, silently: the pages still load,
+# submissions just fail.
 #
-# This has now happened twice. On 2026-09-01 it went unnoticed for three
-# weeks. The first version of this workflow was supposed to prevent a repeat,
-# but it required a SUPABASE_ANON_KEY repository secret to be added by hand
-# afterwards — that never happened, so it failed every day from 2026-09-26
-# and the project paused again around 2026-09-30. The failure notices went to
-# an inbox nobody was watching, which is the same blind spot all over again.
+# History, because each version of this failed in a different way:
+#   - 2026-09-01: first pause, unnoticed for three weeks.
+#   - v1 needed a repository secret added by hand; that never happened, so it
+#     failed daily from 2026-09-26 and the project paused again ~2026-09-30.
+#   - v2 (2026-10-03) put the publishable key in this file and passed every
+#     day — but made one read a day that RLS answers with zero rows, and
+#     Supabase still warned in November that the project was about to pause.
+#     One empty read a day evidently doesn't count as enough activity.
 #
-# So the key is in this file rather than in a secret, deliberately. It is the
-# publishable key (sb_publishable_...), the one Supabase designs to be shared:
-# it already ships inside the site's JavaScript bundle and is readable by
-# anyone who views source on missann.us. Row Level Security is what actually
-# protects the data — `contacts` returns "permission denied" to this key, and
-# `form_submissions` returns an empty array. Putting it here adds no exposure
-# and removes the manual step that broke this twice.
+# v3, this version:
+#   - WRITES. keepalive_ping() (supabase/migrations/006_keepalive_heartbeat.sql)
+#     updates a single heartbeat row, which is unambiguous database activity.
+#   - Four times a day instead of once.
+#   - Keeps the repository itself active (see the `stay-enabled` job), because
+#     GitHub disables scheduled workflows in public repos after 60 days with
+#     no repository activity — which would have stopped this around
+#     2026-12-20 with nobody noticing.
 #
-# The service role key is the opposite and must NEVER appear in this repo.
+# The key below is the publishable key (sb_publishable_...), which Supabase
+# designs to be shared: it already ships in the site's JS bundle. RLS is the
+# real protection. The service role key must NEVER appear in this repo.
 #
-# Runs daily rather than weekly. GitHub can skip scheduled runs during periods
-# of high load, and a skipped weekly run would leave a gap longer than the
-# 7-day window; daily means several runs have to fail before the project is at
-# risk. Public repositories get unlimited Actions minutes, so this is free.
-#
-# KNOWN LIMITATION: GitHub disables scheduled workflows after 60 days with no
-# repository activity, and emails the owner first. If this project ever goes
-# quiet for two months, re-enable the workflow from the Actions tab — or move
-# the ping to a Cloudflare Worker cron trigger, which has no such rule.
+# The only guarantee against pausing is the paid Pro plan. This is the
+# strongest free option.
 
 name: Supabase keepalive
 
 on:
   schedule:
-    # 09:17 UTC daily. An odd minute on purpose: scheduled jobs on the hour
-    # are the most likely to be delayed or dropped when GitHub is busy.
-    - cron: "17 9 * * *"
+    # Every 6 hours, on an odd minute: jobs on the hour are the most likely to
+    # be delayed or dropped when GitHub is busy.
+    - cron: "17 3,9,15,21 * * *"
+    # 1st of each month: keep the repository active (stay-enabled job).
+    - cron: "41 12 1 * *"
   # Lets you run it by hand from the Actions tab to confirm it works.
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: https://gdyoudoxqbmqcsskwqan.supabase.co
+      # Publishable key — see the note at the top of this file.
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_JxBswl0CtCd_ncWVq9HnRQ_HVRttZb9
     steps:
-      - name: Ping the Supabase REST API
-        env:
-          SUPABASE_URL: https://gdyoudoxqbmqcsskwqan.supabase.co
-          # Publishable key — see the note at the top of this file.
-          SUPABASE_PUBLISHABLE_KEY: sb_publishable_JxBswl0CtCd_ncWVq9HnRQ_HVRttZb9
+      - name: Write a heartbeat to the database
         run: |
-          # A real authenticated read, not just a reachable-host check: RLS
-          # returns an empty array to this key, so a 200 proves the database
-          # answered rather than merely that the edge is up. A paused project
-          # returns 000 or 5xx here — during a restore it briefly returns 401
-          # and 404 from the edge while Postgres is still coming up, which is
-          # exactly why a bare unauthenticated ping would be misleading.
-          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 \
-            "${SUPABASE_URL}/rest/v1/form_submissions?select=id&limit=1" \
+          # POST to the RPC endpoint runs keepalive_ping(), which updates one
+          # row. A 200 proves Postgres executed a write, not merely that the
+          # edge answered: a paused project returns 000/5xx, and during a
+          # restore the edge briefly returns 401/404 while Postgres comes up.
+          response=$(curl -sS -w '\n%{http_code}' --max-time 30 \
+            -X POST "${SUPABASE_URL}/rest/v1/rpc/keepalive_ping" \
             -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}")
+            -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n -1)
 
-          echo "Supabase responded HTTP ${code}"
+          echo "Supabase responded HTTP ${code}: ${body}"
 
-          if [ "$code" != "200" ]; then
-            echo "Expected HTTP 200. The project may be paused, or the"
-            echo "publishable key may have been rotated. Check the Supabase"
-            echo "dashboard at https://supabase.com/dashboard/project/gdyoudoxqbmqcsskwqan"
+          if [ "$code" = "404" ]; then
+            echo "::error::keepalive_ping() not found — run"
+            echo "supabase/migrations/006_keepalive_heartbeat.sql in the"
+            echo "Supabase SQL editor."
             exit 1
           fi
 
-          echo "Project is awake."
+          if [ "$code" != "200" ]; then
+            echo "::error::Expected HTTP 200. The project may be paused, or"
+            echo "the publishable key may have been rotated. Check"
+            echo "https://supabase.com/dashboard/project/gdyoudoxqbmqcsskwqan"
+            exit 1
+          fi
+
+          echo "Heartbeat written."
+
+  stay-enabled:
+    # Only on the monthly schedule (or a manual run), not every 6 hours.
+    if: github.event.schedule == '41 12 1 * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Commit a monthly heartbeat so GitHub keeps this workflow on
+        run: |
+          # A commit counts as repository activity and resets GitHub's
+          # 60-day clock. Touches only this one file. Note: any push to main
+          # also triggers a (harmless) Cloudflare rebuild of the site.
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/keepalive-heartbeat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/keepalive-heartbeat
+          git commit -m "Monthly keepalive heartbeat" || { echo "Nothing to commit"; exit 0; }
+          git push
