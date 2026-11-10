@@ -72,11 +72,23 @@ repository secret to be added by hand, that never happened, so it failed
 daily from 2026-09-26 and the project paused again around 2026-09-30. The
 failure notices went to an inbox nobody watches — the same blind spot.
 
+The second version put the publishable key in the workflow and passed every
+day — but it made one read a day that RLS answers with zero rows, and
+Supabase still warned in November 2026 that the project was about to pause.
+One empty read a day evidently doesn't count as enough activity.
+
 [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml)
-now pings the REST API daily with the publishable key written directly in
-the workflow, so there is no setup step left to forget. Scheduled workflows
-only run from the **default branch**, so it takes effect once merged to
-`main` and needs nothing else.
+now **writes** a heartbeat four times a day by calling `keepalive_ping()`
+([006_keepalive_heartbeat.sql](supabase/migrations/006_keepalive_heartbeat.sql)),
+which updates a single row — unambiguous database activity, and the table
+can never grow. Scheduled workflows only run from the **default branch**.
+
+GitHub also disables scheduled workflows in public repos after 60 days with
+no repository activity. The workflow's monthly `stay-enabled` job commits a
+one-line `.github/keepalive-heartbeat` file to prevent that; each such push
+also triggers a harmless Cloudflare rebuild.
+
+The only guarantee against pausing is Supabase's paid Pro plan.
 
 **On keys in this repo** — the two Supabase keys are not equivalent, and the
 "never commit keys" rule applies to one of them:
@@ -89,11 +101,6 @@ only run from the **default branch**, so it takes effect once merged to
 - The **service role** key bypasses RLS entirely and must never appear in
   this repo, in a workflow, or in the bundle. It belongs only in Supabase
   secrets, where the Edge Functions read it.
-
-Note that GitHub disables scheduled workflows after 60 days of repository
-inactivity. If this project ever goes quiet that long, re-enable it from the
-Actions tab, or move the ping to a Cloudflare Worker cron trigger, which has
-no equivalent rule.
 
 ## Donations
 
